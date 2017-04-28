@@ -9,7 +9,10 @@
    4. Run middleware.pp to install patched Java and WebLogic
    5. Start PeopleSoft Services
 .EXAMPLE
-   PS c:\psft\tools> .\cpu.ps1 -jdk_version 1.7.0_141 -wl_version 12.1.3.0.170418 
+    $env:JAVA_HOME="C:\psft\pt\jdk1.7.0_101"
+    $env:ORACLE_HOME="C:\psft\pt\bea"
+    cd C:\vagrant\cpu
+   .\cpu.ps1 -jdk_version 1.7.0_141 -wl_version 12.1.3.0.170418 
 .INPUTS
     JDK Version 
     WebLogic Version
@@ -27,8 +30,8 @@ $startDTM = (Get-Date)
 # ---------------------------------------------------------------------------------------------------------------------
 
 Write-Host "`n`nDeploying CPU Patches on ${computername}"
-Write-Host "`tJDK Archive: `t`tpt-jdk${jdk_version}"          -ForegroundColor Green
-Write-Host "`tWebLogic Archive: `tpt-weblogic${wl_version}"   -ForegroundColor Green
+Write-Host "`tJDK Archive: `t`tpt-jdk${jdk_version}.tgz"          -ForegroundColor Green
+Write-Host "`tWebLogic Archive: `tpt-weblogic${wl_version}.tgz"   -ForegroundColor Green
 Write-Host "`n"
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -53,15 +56,18 @@ Write-Host "`t[${computername}] [Done] Copy New Archives"
 
 Write-Host "`t[${computername}] [Task] Stop PIA Domains"
 get-service -DisplayName Psft*,*Oracle* | stop-service -force
+Get-Process ps* -ErrorAction SilentlyContinue | Stop-Process -Force
 Get-Process rmiregistry -ErrorAction SilentlyContinue | Stop-Process -Force
 Get-Process tuxipc -ErrorAction SilentlyContinue | Stop-Process -Force
 Get-Process slisten -ErrorAction SilentlyContinue | Stop-Process -Force
+Get-Process java -ErrorAction SilentlyContinue | Stop-Process -Force
 Write-Host "`t[${computername}] [Done] Stop PIA Domains"
 
 #############################################################################
 ## 3. Remove current Java and WebLogic installs if not using `redeploy: true`
 #############################################################################
 
+copy-item c:\vagrant\config\psft_customizations.yaml c:\programdata\puppetlabs\puppet\etc\data\psft_customizations.yaml
 $redeploy = $(hiera redeploy)
 if (-Not ($redeploy -eq "true")) {
   Write-Host "`t[${computername}] [Task] Remove Unpatched Software"
@@ -78,7 +84,6 @@ if (-Not ($redeploy -eq "true")) {
 ############################################################
 
 Write-Host "`t[${computername}] [Task] Deploy Patched Software"
-copy-item c:\vagrant\config\psft_customizations.yaml c:\programdata\puppetlabs\puppet\etc\data\psft_customizations.yaml
 # Deploy custom role - io_tools_deployment.pp - for `env_type: fulltier` systems (PUM)
 copy-item c:\vagrant\cpu\io_tools_deployment.pp c:\programdata\puppetlabs\puppet\etc\modules\pt_role\manifests\io_tools_deployment.pp
 # Copy `middleware.pp` and run it
