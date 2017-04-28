@@ -19,26 +19,48 @@ param(
     [Parameter(Mandatory=$true)]$wl_version
 )
 
-$env:ARCHIVE_HOME   = "c:\vagrant\dpks\archives"
+$env:ARCHIVE_HOME   = "c:\vagrant\dpk\archives"
 $env:ORACLE_HOME    = $(hiera weblogic_location)
 $env:JAVA_HOME      = $(hiera jdk_location)
+$random = get-random
+$TEMP = "${env:TEMP}\${random}"
+$startDTM = (Get-Date)
+$computername = (Get-WmiObject Win32_Computersystem).Name.toLower()
 
-# $env:ORACLE_HOME="c:\psft\pt\bea"
-# $env:JAVA_HOME="c:\psft\pt\jdk1.7.0_101"
-# $wl_version="12.1.3.170418"
-# $jdk_version="1.7.0_141"
+# ---------------------------------------------------------------------------------------------------------------------
 
-# Java
+###############################
+## Java
+###############################
 
-7z a -ttar "${env:TEMP}\pt-jdk${jdk_version}.tar" $env:JAVA_HOME\*
-7z a -tgzip "${env:ARCHIVE_HOME}\pt-jdk${jdk_version}.tgz" "${env:TEMP}\pt-jdk${jdk_version}.tar"
+Write-Host "`t[${computername}] [Task] Create Java Tarball"
+7z a -ttar "${TEMP}\pt-jdk${jdk_version}.tar" $env:JAVA_HOME\*
+7z a -tgzip "${env:ARCHIVE_HOME}\pt-jdk${jdk_version}.tgz" "${TEMP}\pt-jdk${jdk_version}.tar"
+Write-Host "`t[${computername}] [Done] Create Java Tarball"
 
-# WebLogic
+###############################
+## WebLogic
+###############################
 
-. ${env:ORACLE_HOME}\oracle_common\bin\copyBinary.cmd -javaHome ${env:JAVA_HOME} -archiveLoc ${env:TEMP}\pt-weblogic-copy.jar -sourceMWHomeLoc ${env:ORACLE_HOME}
+Write-Host "`t[${computername}] [Task] Create WebLogic Tarball"
+. ${env:ORACLE_HOME}\oracle_common\bin\copyBinary.cmd -javaHome ${env:JAVA_HOME} -archiveLoc ${TEMP}\pt-weblogic-copy.jar -sourceMWHomeLoc ${env:ORACLE_HOME}
 
-7z a -ttar "${env:TEMP}\pt-weblogic${wl_version}.tar" "${env:ORACLE_HOME}\oracle_common\jlib\cloningclient.jar"
-7z a -ttar "${env:TEMP}\pt-weblogic${wl_version}.tar" "${env:ORACLE_HOME}\oracle_common\bin\pasteBinary.cmd"
-7z a -ttar "${env:TEMP}\pt-weblogic${wl_version}.tar" "${env:TEMP}\pt-weblogic-copy.jar"
+7z a -ttar "${TEMP}\pt-weblogic${wl_version}.tar" "${env:ORACLE_HOME}\oracle_common\jlib\cloningclient.jar"
+7z a -ttar "${TEMP}\pt-weblogic${wl_version}.tar" "${env:ORACLE_HOME}\oracle_common\bin\pasteBinary.cmd"
+7z a -ttar "${TEMP}\pt-weblogic${wl_version}.tar" "${TEMP}\pt-weblogic-copy.jar"
 
-7z a -tgzip "${env:ARCHIVE_HOME}\pt-weblogic${wl_version}.tgz" "${env:TEMP}\pt-weblogic${wl_version}.tar"
+7z a -tgzip "${env:ARCHIVE_HOME}\pt-weblogic${wl_version}.tgz" "${TEMP}\pt-weblogic${wl_version}.tar"
+Write-Host "`t[${computername}] [Done] Create WebLogic Tarball"
+
+# ---------------------------------------------------------------------------------------------------------------------
+
+###############################
+## Report Times
+###############################
+
+Write-Host "`n`n"
+$endDTM = (Get-Date)
+$ts = New-TimeSpan -Seconds $(($endDTM-$startDTM).totalseconds)
+$elapsedTime = '{0:00}:{1:00}:{2:00}' -f $ts.Hours,$ts.Minutes,$ts.Seconds
+Write-Host "--------------`t--------"
+Write-Host "Total Time: `t${elapsedTime}"
