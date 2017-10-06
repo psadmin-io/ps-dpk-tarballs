@@ -8,4 +8,4 @@ This repository contains sample scripts to create custom DPK tarballs to be used
 * `cpu.ps1`: Sample script showing how to apply CPU patches using the custom `.tgz` files.
 * `middleware.pp`: Puppet manifest to deploy only middleware changes with the DPK
 
-To learn more about these scripts, [read this blog post]().
+To learn more about these scripts, [read this blog post](http://psadmin.io/2017/05/02/apply-cpu-patches-with-deployment-packages/).
