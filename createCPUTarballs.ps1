@@ -1,21 +1,23 @@
 <#
 .Synopsis
-   Patch WebLogic and Java
+   Create DPK .tgz files to deploy WebLogic, Tuxedo and Java
 .DESCRIPTION
    This script will:
    1. Create a tarball from the current JAVA_HOME
+   1. Create a tarball from the current Tuxedo ORACLE_HOME
    2. Create a tarball from the current WebLogic ORACLE_HOME
 .EXAMPLE
-   .\createCPUTarballs.ps1 -jdk_version 1.7.0_141 -wl_version 12.1.3.0.170418
+   .\createCPUTarballs.ps1 -jdk_version 1.7.0_141 -tux_version 12.1.3.0.100 -wl_version 12.1.3.0.170418
 .INPUTS
     JDK Version to deploy
+    Tuxedo Version to Deploy
     WebLogic Version to Deploy
-    Current PeopleTools version 
 #>
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$true)]$jdk_version,
+    [Parameter(Mandatory=$true)]$tux_version,
     [Parameter(Mandatory=$true)]$wl_version
 )
 
@@ -37,6 +39,15 @@ Write-Host "`t[${computername}] [Task] Create Java Tarball"
 7z a -ttar "${TEMP}\pt-jdk${jdk_version}.tar" $env:JAVA_HOME\*
 7z a -tgzip "${env:ARCHIVE_HOME}\pt-jdk${jdk_version}.tgz" "${TEMP}\pt-jdk${jdk_version}.tar"
 Write-Host "`t[${computername}] [Done] Create Java Tarball"
+
+###############################
+## Tuxedo
+###############################
+
+Write-Host "`t[${computername}] [Task] Create Tuxedo Tarball"
+7z a -ttar "${env:TEMP}\pt-tuxedo${TUX_VERSION}.tar" $TUX_HOME\*
+7z a -tgzip "${env:TEMP}\dpk\archives\pt-tuxedo${TUX_VERSION}.tgz" "${env:TEMP}\pt-tuxedo${TUX_VERSION}.tar"
+Write-Host "`t[${computername}] [Done] Create Tuxedo Tarball"
 
 ###############################
 ## WebLogic
