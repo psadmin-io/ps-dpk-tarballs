@@ -24,6 +24,7 @@ param(
 $env:ARCHIVE_HOME   = "c:\vagrant\dpk\archives"
 $env:ORACLE_HOME    = $(hiera weblogic_location)
 $env:JAVA_HOME      = $(hiera jdk_location)
+$env:TUX_HOME       = $(hiera tuxedo_location)
 $random = get-random
 $TEMP = "${env:TEMP}\${random}"
 $startDTM = (Get-Date)
